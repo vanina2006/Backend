@@ -18,9 +18,9 @@ dotenv.config();
 
 const app = express();
 app.get("/test", (req, res) => {
-  res.json({
-    message: "C'est bien mon serveur !",
-  });
+    res.json({
+        message: "C'est bien mon serveur !",
+    });
 });
 
 app.use(cors());
@@ -55,21 +55,21 @@ app.use("/publications", publicationRoutes);
 app.use("/messages", messageRoutes);
 
 sequelize
-  .authenticate()
-  .then(() => {
-    console.log("✅ Connexion à MySQL réussie");
+    .authenticate()
+    .then(() => {
+        console.log("✅ Connexion à MySQL réussie");
 
-    return sequelize.sync({ alter: true });
-  })
-  .then(() => {
-    console.log("✅ Modèles synchronisés");
-  })
-  .catch((error) => {
-    console.error("❌ Erreur de connexion :", error);
-  });
+        return sequelize.sync({ alter: true });
+    })
+    .then(() => {
+        console.log("✅ Modèles synchronisés");
+    })
+    .catch((error) => {
+        console.error("❌ Erreur de connexion :", error);
+    });
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Serveur lancé sur http://localhost:${PORT}`);
+    console.log(`🚀 Serveur lancé sur http://localhost:${PORT}`);
 });

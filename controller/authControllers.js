@@ -1,23 +1,17 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-
 const User = require("../models/users");
 
-// ============================
-// REGISTER
-// ============================
+// ==========================================
+// INSCRIPTION
+// ==========================================
 
 const register = async(req, res) => {
     try {
         const { nom, prenom, adresse, telephone, email, password, profession } =
         req.body;
 
-        console.log("BODY REÇU :", req.body);
-        console.log("PROFESSION REÇUE :", profession);
-        console.log("TELEPHONE REÇU :", telephone);
-
-        // Vérifier les champs obligatoires
-
+        // Vérification des champs obligatoires
         if (!nom || !prenom || !adresse || !telephone || !email || !password) {
             return res.status(400).json({
                 message: "Veuillez remplir tous les champs obligatoires.",
@@ -25,11 +19,8 @@ const register = async(req, res) => {
         }
 
         // Vérifier si l'email existe déjà
-
         const userExiste = await User.findOne({
-            where: {
-                email: email,
-            },
+            where: { email },
         });
 
         if (userExiste) {
@@ -39,45 +30,26 @@ const register = async(req, res) => {
         }
 
         // Hasher le mot de passe
-
         const passwordHash = await bcrypt.hash(password, 10);
 
-        // Récupérer la photo
+        // Photo
+        const photo = req.file ? req.file.filename : null;
 
-        let photo = null;
-
-        if (req.file) {
-            photo = req.file.filename;
-        }
-
-        // Créer l'utilisateur
-
+        // Création utilisateur
         const user = await User.create({
             nom,
             prenom,
             adresse,
             telephone,
             email,
-
             password: passwordHash,
-
             photo,
-
-            profession,
-
-            // On force le rôle client
+            profession: profession || null,
             role: "client",
         });
 
-        // AJOUT : vérifier les informations enregistrées
-        console.log("UTILISATEUR CRÉÉ :", user.toJSON());
-        console.log("TELEPHONE ENREGISTRÉ :", user.telephone);
-
-        // Réponse
-
         return res.status(201).json({
             message: "Inscription réussie.",
-
             user: {
                 id: user.id,
                 nom: user.nom,
@@ -85,14 +57,13 @@ const register = async(req, res) => {
                 adresse: user.adresse,
                 telephone: user.telephone,
                 email: user.email,
-                // password:user.password,
                 photo: user.photo,
                 profession: user.profession,
                 role: user.role,
             },
         });
     } catch (error) {
-        console.error("Erreur register :", error);
+        console.error("ERREUR REGISTER :", error);
 
         return res.status(500).json({
             message: "Erreur lors de l'inscription.",
@@ -101,28 +72,24 @@ const register = async(req, res) => {
     }
 };
 
-// ============================
-// LOGIN
-// ============================
+// ==========================================
+// CONNEXION
+// ==========================================
 
 const login = async(req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Vérifier les champs
-
+        // Vérification
         if (!email || !password) {
             return res.status(400).json({
                 message: "Email et mot de passe obligatoires.",
             });
         }
 
-        // Chercher l'utilisateur
-
+        // Recherche utilisateur
         const user = await User.findOne({
-            where: {
-                email: email,
-            },
+            where: { email },
         });
 
         if (!user) {
@@ -131,8 +98,7 @@ const login = async(req, res) => {
             });
         }
 
-        // Comparer le mot de passe
-
+        // Vérification mot de passe
         const passwordCorrect = await bcrypt.compare(password, user.password);
 
         if (!passwordCorrect) {
@@ -141,28 +107,20 @@ const login = async(req, res) => {
             });
         }
 
-        // Créer le JWT
-
+        // Création du token
         const token = jwt.sign({
                 id: user.id,
                 email: user.email,
                 role: user.role,
             },
-
-            "techconnect_secret_key_2026",
-
-            {
+            "techconnect_secret_key_2026", {
                 expiresIn: "1d",
             },
         );
 
-        // Retourner les informations
-
         return res.status(200).json({
             message: "Connexion réussie.",
-
             token,
-
             user: {
                 id: user.id,
                 nom: user.nom,
@@ -176,7 +134,7 @@ const login = async(req, res) => {
             },
         });
     } catch (error) {
-        console.error("Erreur login :", error);
+        console.error("ERREUR LOGIN :", error);
 
         return res.status(500).json({
             message: "Erreur lors de la connexion.",
